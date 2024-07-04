@@ -28,6 +28,7 @@ export const getLoggerConfig = (): IMicroLoggerModuleAsyncOptions => ({
   useFactory: (configService: ConfigService) => ({
     APP_NAME: configService.get('APP_NAME') ?? 'API',
     LOG_PATH: `${process.cwd()}/publisher/${configService.get('APP_NAME')}`,
+    LOKI_HOST: configService.get<string>('LOKI_URL'),
   }),
 });
 
