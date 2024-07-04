@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PublisherService } from 'src/logger/logger.service';
+import { PublisherService } from '../logger/logger.service';
 
 @Injectable()
 export class TestService {

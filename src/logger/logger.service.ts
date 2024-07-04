@@ -1,24 +1,45 @@
 import { Inject, Injectable } from '@nestjs/common';
 import * as path from 'path';
 import { appendFileSync, ensureDir, existsSync, writeFileSync } from 'fs-extra';
-import { MICRO_LOGGER_MODULE_OPTIONS } from 'src/app.constants';
-import { IMicroLoggerOptions } from 'src/app.interface';
+import { MICRO_LOGGER_MODULE_OPTIONS } from '../app.constants';
+import { IMicroLoggerOptions } from '../app.interface';
+import winston, { createLogger } from 'winston';
+import LokiTransport from 'winston-loki';
 
 @Injectable()
 export class PublisherService {
 	public LOG_PATH: string;
 	public APP_NAME: string;
+	public LOKI_HOST: string;
+	loki: winston.Logger;
 
 	constructor(
 		@Inject(MICRO_LOGGER_MODULE_OPTIONS) options: IMicroLoggerOptions,
 	) {
 		this.LOG_PATH = options.LOG_PATH;
 		this.APP_NAME = options.APP_NAME;
+		this.LOKI_HOST = options.LOKI_HOST;
+
+		const lokiOptions = {
+			transports: [
+				new LokiTransport({
+					labels: {
+						appName: options.APP_NAME,
+					},
+					host: options.LOKI_HOST,
+				}),
+			],
+		};
+		this.loki = createLogger(lokiOptions);
 	}
 
 	async log(
 		message: string,
-		{ archive, terminal } = { archive: true, terminal: true },
+		{ archive, terminal, loki } = {
+			archive: true,
+			terminal: true,
+			loki: true,
+		},
 	) {
 		if (terminal) {
 			const color = '\x1b[36m%s\x1b[0m'; // tail
@@ -26,11 +47,19 @@ export class PublisherService {
 		}
 
 		if (archive) await this.publish('logs', message);
+
+		if (loki) {
+			this.loki.data(`[${this.APP_NAME}] ${message}`);
+		}
 	}
 
 	async error(
 		message: string,
-		{ archive, terminal } = { archive: true, terminal: true },
+		{ archive, terminal, loki } = {
+			archive: true,
+			terminal: true,
+			loki: true,
+		},
 	) {
 		if (terminal) {
 			const color = '\x1b[35m%s\x1b[0m'; // red
@@ -38,11 +67,19 @@ export class PublisherService {
 		}
 
 		if (archive) await this.publish('exceptions', message);
+
+		if (loki) {
+			this.loki.error(`[${this.APP_NAME}] ${message}`);
+		}
 	}
 
 	async info(
 		message: string,
-		{ archive, terminal } = { archive: true, terminal: true },
+		{ archive, terminal, loki } = {
+			archive: true,
+			terminal: true,
+			loki: true,
+		},
 	) {
 		if (terminal) {
 			const color = '\x1b[33m%s\x1b[0m'; // yellow
@@ -50,11 +87,19 @@ export class PublisherService {
 		}
 
 		if (archive) await this.publish('info', message);
+
+		if (loki) {
+			this.loki.info(`[${this.APP_NAME}] ${message}`);
+		}
 	}
 
 	async critical(
 		message: string,
-		{ archive, terminal } = { archive: true, terminal: true },
+		{ archive, terminal, loki } = {
+			archive: true,
+			terminal: true,
+			loki: true,
+		},
 	) {
 		if (terminal) {
 			const color = '\x1b[31m%s\x1b[0m'; // red
@@ -62,6 +107,10 @@ export class PublisherService {
 		}
 
 		if (archive) await this.publish('criticals', message);
+
+		if (loki) {
+			this.loki.crit(`[${this.APP_NAME}] ${message}`);
+		}
 	}
 
 	private async publish(
