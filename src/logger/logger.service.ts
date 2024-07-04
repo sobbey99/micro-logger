@@ -108,7 +108,7 @@ export class PublisherService {
 		if (archive) await this.publish('criticals', message);
 
 		if (loki) {
-			this.loki.crit(`[${this.APP_NAME}] ${message}`);
+			this.loki.error(`[${this.APP_NAME}] ${message}`);
 		}
 	}
 
