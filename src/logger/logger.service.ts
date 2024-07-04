@@ -4,7 +4,7 @@ import { appendFileSync, ensureDir, existsSync, writeFileSync } from 'fs-extra';
 import { MICRO_LOGGER_MODULE_OPTIONS } from '../app.constants';
 import { IMicroLoggerOptions } from '../app.interface';
 import winston, { createLogger } from 'winston';
-import LokiTransport from 'winston-loki';
+import LokiTransport = require('winston-loki');
 
 @Injectable()
 export class PublisherService {
@@ -20,7 +20,7 @@ export class PublisherService {
 		this.APP_NAME = options.APP_NAME;
 		this.LOKI_HOST = options.LOKI_HOST;
 
-		const lokiOptions = {
+		this.loki = createLogger({
 			transports: [
 				new LokiTransport({
 					labels: {
@@ -29,8 +29,7 @@ export class PublisherService {
 					host: options.LOKI_HOST,
 				}),
 			],
-		};
-		this.loki = createLogger(lokiOptions);
+		});
 	}
 
 	async log(
