@@ -48,7 +48,7 @@ export class PublisherService {
 		if (archive) await this.publish('logs', message);
 
 		if (loki) {
-			this.loki.data(`[${this.APP_NAME}] ${message}`);
+			this.loki.info(`[${this.APP_NAME}] ${message}`);
 		}
 	}
 
