@@ -1,7 +1,8 @@
 import { ModuleMetadata } from '@nestjs/common';
 
 export interface IMicroLoggerOptions {
-	loggFilePath: string;
+	LOG_PATH: string;
+	APP_NAME: string;
 }
 
 export interface IMicroLoggerModuleAsyncOptions

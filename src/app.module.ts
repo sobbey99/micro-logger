@@ -1,6 +1,7 @@
 import { DynamicModule, Global, Module, Provider } from '@nestjs/common';
 import { IMicroLoggerModuleAsyncOptions } from './app.interface';
 import { MICRO_LOGGER_MODULE_OPTIONS } from './app.constants';
+import { PublisherService } from './logger/logger.service';
 
 @Global()
 @Module({})
@@ -12,8 +13,8 @@ export class MicroLogModule {
 		return {
 			module: MicroLogModule,
 			imports: options.imports,
-			providers: [asyncOptions],
-			exports: [MicroLogModule],
+			providers: [asyncOptions, PublisherService],
+			exports: [MicroLogModule, PublisherService],
 		};
 	}
 

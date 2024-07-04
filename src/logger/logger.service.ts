@@ -1,17 +1,28 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import * as path from 'path';
 import { appendFileSync, ensureDir, existsSync, writeFileSync } from 'fs-extra';
-import { path as AppRootPath } from 'app-root-path';
+import { MICRO_LOGGER_MODULE_OPTIONS } from 'src/app.constants';
+import { IMicroLoggerOptions } from 'src/app.interface';
 
 @Injectable()
 export class PublisherService {
+	public LOG_PATH: string;
+	public APP_NAME: string;
+
+	constructor(
+		@Inject(MICRO_LOGGER_MODULE_OPTIONS) options: IMicroLoggerOptions,
+	) {
+		this.LOG_PATH = options.LOG_PATH;
+		this.APP_NAME = options.APP_NAME;
+	}
+
 	async log(
 		message: string,
 		{ archive, terminal } = { archive: true, terminal: true },
 	) {
 		if (terminal) {
 			const color = '\x1b[36m%s\x1b[0m'; // tail
-			console.log(color, message);
+			console.log(color, `[${this.APP_NAME}] `, message);
 		}
 
 		if (archive) await this.publish('logs', message);
@@ -23,7 +34,7 @@ export class PublisherService {
 	) {
 		if (terminal) {
 			const color = '\x1b[35m%s\x1b[0m'; // red
-			console.error(color, message);
+			console.error(color, `[${this.APP_NAME}] `, message);
 		}
 
 		if (archive) await this.publish('exceptions', message);
@@ -35,7 +46,7 @@ export class PublisherService {
 	) {
 		if (terminal) {
 			const color = '\x1b[33m%s\x1b[0m'; // yellow
-			console.info(color, message);
+			console.info(color, `[${this.APP_NAME}] `, message);
 		}
 
 		if (archive) await this.publish('info', message);
@@ -47,7 +58,7 @@ export class PublisherService {
 	) {
 		if (terminal) {
 			const color = '\x1b[31m%s\x1b[0m'; // red
-			console.error(color, message);
+			console.error(color, `[${this.APP_NAME}] `, message);
 		}
 
 		if (archive) await this.publish('criticals', message);
@@ -60,11 +71,11 @@ export class PublisherService {
 		const partitions = new Date().toISOString().split('T');
 		const date = partitions[0];
 
-		message = `${partitions[1]}: ${message}`;
+		message = `[${this.APP_NAME}] ${partitions[1]}: ${message}`;
 
-		const url = path.join(AppRootPath, `./logs/${tag}/${date}.log`);
+		const url = path.join(this.LOG_PATH, `./${tag}/${date}.log`);
 
-		await ensureDir(path.join(AppRootPath, `./logs/${tag}`));
+		await ensureDir(path.join(this.LOG_PATH, `./${tag}`));
 
 		if (!existsSync(url)) writeFileSync(url, `${message}\n`);
 		else appendFileSync(url, `${message}\n`);
